@@ -1,0 +1,116 @@
+import tkinter as tk 
+import time
+import random
+from nltk.corpus import words
+from nltk.corpus import wordnet
+import nltk
+import os 
+nltk.data.path.append(os.path.join(os.getcwd(), "nltk_data"))
+
+# Download nltk data files (only needed once)
+nltk.download('words')
+nltk.download('wordnet')
+
+# Use nltk words and wordnet for vocabulary and definitions
+VOCABULARY = []
+english_words = set(words.words())
+
+# Sample words for demonstration
+sample_words = random.sample(english_words, 50)
+
+# Prepare vocabulary with definitions and metadata
+for word in sample_words:
+    synsets = wordnet.synsets(word)
+    if synsets:
+        pos = synsets[0].pos()  # Part of speech
+        definition_en = synsets[0].definition()
+        # Difficulty level and Vietnamese definition (as placeholders)
+        cefr_level = "B2"  # Placeholder for CEFR level (extendable with real data)
+        definition_vi = "Định nghĩa tiếng Việt cho từ: " + word
+        pos_label = {
+            'n': 'Noun - Danh từ',
+            'v': 'Verb - Động từ',
+            'a': 'Adjective - Tính từ'
+        }.get(pos, 'Other - Từ loại khác')
+        VOCABULARY.append({
+            "word": word,
+            "definition_en": definition_en,
+            "definition_vi": definition_vi,
+            "pos": pos_label,
+            "level": cefr_level
+        })
+
+class TypingPracticeApp:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Typing Practice")
+        self.master.configure(bg="#f0f8ff")
+
+        self.current_word_data = random.choice(VOCABULARY)
+
+        self.main_frame = tk.Frame(master, bg="#f0f8ff")
+        self.main_frame.pack(padx=20, pady=20)
+
+        self.word_label = tk.Label(self.main_frame, text=self.current_word_data["word"], font=("Arial", 24, "bold"), fg="#ff4500", bg="#f0f8ff")
+        self.word_label.grid(row=0, column=0, pady=10)
+
+        self.entry = tk.Entry(self.main_frame, width=30, font=("Arial", 16))
+        self.entry.grid(row=1, column=0, pady=10)
+        self.entry.bind("<Return>", self.check_word)
+
+        self.definition_frame = tk.Frame(self.main_frame, bg="#f0f8ff")
+        self.definition_frame.grid(row=2, column=0, pady=10)
+
+        self.definition_label_en = tk.Label(self.definition_frame, text=f"English Definition: {self.current_word_data['definition_en']}", wraplength=500, justify="left", bg="#f0f8ff")
+        self.definition_label_en.pack(anchor="w")
+
+        self.definition_label_vi = tk.Label(self.definition_frame, text=f"Vietnamese Definition: {self.current_word_data['definition_vi']}", wraplength=500, justify="left", bg="#f0f8ff")
+        self.definition_label_vi.pack(anchor="w")
+
+        self.metadata_label = tk.Label(self.definition_frame, text=f"Part of Speech: {self.current_word_data['pos']} | Difficulty: {self.current_word_data['level']}", wraplength=500, justify="left", bg="#f0f8ff", fg="#008b8b")
+        self.metadata_label.pack(anchor="w")
+
+        self.result_label = tk.Label(self.main_frame, text="Start typing and press Enter.", font=("Arial", 12), bg="#f0f8ff")
+        self.result_label.grid(row=3, column=0, pady=10)
+
+        self.reset_button = tk.Button(self.main_frame, text="Reset", command=self.reset, bg="#add8e6")
+        self.reset_button.grid(row=4, column=0, pady=10)
+
+        self.start_time = None
+        self.word_count = 0
+
+    def check_word(self, event=None):
+        if self.start_time is None:
+            self.start_time = time.time()
+
+        typed_word = self.entry.get().strip().lower()
+        current_word = self.current_word_data["word"].lower()
+
+        if typed_word == current_word:
+            self.word_count += 1
+            self.entry.delete(0, tk.END)
+            self.current_word_data = random.choice(VOCABULARY)
+            self.word_label.config(text=self.current_word_data["word"])
+            self.definition_label_en.config(text=f"English Definition: {self.current_word_data['definition_en']}")
+            self.definition_label_vi.config(text=f"Vietnamese Definition: {self.current_word_data['definition_vi']}")
+            self.metadata_label.config(text=f"Part of Speech: {self.current_word_data['pos']} | Difficulty: {self.current_word_data['level']}")
+            self.result_label.config(text="Correct! Type the next word.")
+        else:
+            self.result_label.config(text="Incorrect! Try again.")
+
+    def reset(self):
+        self.current_word_data = random.choice(VOCABULARY)
+        self.word_label.config(text=self.current_word_data["word"])
+        self.definition_label_en.config(text=f"English Definition: {self.current_word_data['definition_en']}")
+        self.definition_label_vi.config(text=f"Vietnamese Definition: {self.current_word_data['definition_vi']}")
+        self.metadata_label.config(text=f"Part of Speech: {self.current_word_data['pos']} | Difficulty: {self.current_word_data['level']}")
+
+        self.entry.delete(0, tk.END)
+        self.result_label.config(text="Start typing and press Enter.")
+        self.start_time = None
+        self.word_count = 0
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TypingPracticeApp(root)
+    root.mainloop()
